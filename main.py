@@ -72,11 +72,11 @@ def main():
         else:
             print(f"Erreur lors de la requête HTTP: {response.status_code}")
         #print(all_messages)
-        """
+        
         for event in all_messages:
-            print('\n')
-            adapt_infos(event)
-        """
+            create_event(event)
+            
+        
 def reformat_date(date_range_str, day_name):
     # Split the date range string to extract the start and end dates
     start_date_part, end_date_part = date_range_str.split('-')
@@ -109,21 +109,6 @@ def reformat_date(date_range_str, day_name):
     
     return formatted_date
 
-"""
-def adapt_infos(event):
-    needed = {}
-    hour = event['time'].split('-')[0].strip()
-    print(hour)
-    print(event['day'])
-    event_day_str = f"{event['day']} 2024"  # Assuming event['day'] includes the full date in the format '%A %d %B'
-    print(event_day_str)
-    needed['start'] = datetime.datetime.strptime(f"{event_day_str} {event_day_str}", '%A %d %B %Y %H:%M').isoformat()
-    print(needed['start'])
-    needed['end'] = (datetime.datetime.strptime(needed['start'], '%Y-%m-%dT%H:%M:%S') + datetime.timedelta(hours=1)).isoformat()
-    print(needed['end'])
-    return needed
-
-
 def create_event(event):
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
@@ -141,7 +126,10 @@ def create_event(event):
         # Save the credentials for the next run
         with open("token.json", "w") as token:
             token.write(creds.to_json())
-
+    event_start = event['date']+ 'T' + event['time']
+    print(event_start)
+    event_end = event['date']+ 'T' + event['time']
+    print(event_end)
     try:
         service = build("calendar", "v3", credentials=creds)
         # Create the event object
@@ -164,6 +152,6 @@ def create_event(event):
 
     except HttpError as error:
         print(f"An error occurred: {error}")
-"""
+
 if __name__ == "__main__":
     main()
