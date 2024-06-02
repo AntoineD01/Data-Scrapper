@@ -1,3 +1,5 @@
+#!/C:/Users/Antoine Dupont/AppData/Local/Microsoft/WindowsApps/python3.exe
+
 import requests
 from bs4 import BeautifulSoup as bs
 import datetime
@@ -13,7 +15,7 @@ from googleapiclient.errors import HttpError
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 def main():
-    for i in range(1069, 1070):
+    for i in range(1064, 1077):
         id = str(i)
         # URL of the F2 page
         URL = "https://www.fiaformula2.com/Results?raceid=" + id
@@ -34,7 +36,7 @@ def main():
                 p = text_location.find('p')
                 if p:
                     location = p.get_text(strip=True)
-            print(f'\nLocation : {location}')
+            #print(f'\nLocation : {location}')
             messages = {'location': location}
             # Extract the date
             text_date= soup.find('div', class_='schedule')
@@ -44,7 +46,7 @@ def main():
                 if spans:
                     second_span = spans[1]
                     date = second_span.get_text(strip=True)
-            print(f'Date : {date}')
+            #print(f'Date : {date}')
             
             
             # Extract the info of the event
@@ -62,27 +64,33 @@ def main():
                         messages['time'] = event_time
                         event_date = reformat_date(date, event_day)
                         messages['date'] = event_date
-                        print(f"Event: {event_name}, Day: {event_day}, Time: {event_time}, Date: {event_date}")
+                        #print(f"Event: {event_name}, Day: {event_day}, Time: {event_time}, Date: {event_date}")
                         all_messages.append(messages.copy())
                     else:
                         done = 1
                 
             # If the race has already taken place
-            if done == 1:
-                print("This race is over.")
+            #if done == 1:
+                #print("This race is over.")
         else:
             print(f"Erreur lors de la requête HTTP: {response.status_code}")
 
         event_info = {}
-        for event in all_messages:
-            event_info[event['name']] = adapt_text(event)
+        if all_messages:
+            for event in all_messages:
+                event_info[event['name']] = adapt_text(event)
+
+
+        if all_messages:
+            for event in all_messages:
+                if event_info[event['name']] != (False, False):
+                    exist = create_event(event, event_info)
+                    if exist == 1:
+                        print(f"{event['name']} at {event['location']} is already in the calendar.")
+                else:
+                    print(f"Full schedule not completely available for this event for the {event['name']} of the race at {event['location']}.")
 
         
-        for event in all_messages:
-            exist = create_event(event, event_info)
-
-        if exist == 1:
-            print("Nothing new for now.")
         
 def reformat_date(date_range_str, day_name):
     # Split the date range string to extract the start and end dates
@@ -118,13 +126,19 @@ def reformat_date(date_range_str, day_name):
 
 def adapt_text(event):
     start, end = split_time_range(event['time'])
-    event_start = event['date']+ 'T' + start + ':00+02:00'
-    event_end = event['date']+ 'T' + end + ':00+02:00'
-    return event_start, event_end
+    if not start:
+        return False, False
+    else:
+        event_start = event['date']+ 'T' + start + ':00+02:00'
+        event_end = event['date']+ 'T' + end + ':00+02:00'
+        return event_start, event_end
 
 def split_time_range(time_range):
-    start_time, end_time = time_range.split('-')
-    return start_time, end_time
+    if time_range == 'TBC':
+        return False, False
+    else:
+        start_time, end_time = time_range.split('-')
+        return start_time, end_time
 
 def check_event_existence(service, event_data):
     try:
@@ -202,7 +216,6 @@ def create_event(event, event_info):
             # Insert the event into the calendar
             event = service.events().insert(calendarId='primary', body=event_data).execute()
             print(f"Event created: {event.get('htmlLink')}")
-            print("We enter the data !")
         
         if exist == 1:
             return exist
