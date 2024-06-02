@@ -63,19 +63,22 @@ def main():
                         event_date = reformat_date(date, event_day)
                         messages['date'] = event_date
                         print(f"Event: {event_name}, Day: {event_day}, Time: {event_time}, Date: {event_date}")
-                        all_messages.append(messages)
+                        all_messages.append(messages.copy())
                     else:
                         done = 1
+                
             # If the race has already taken place
             if done == 1:
                 print("This race is over.")
         else:
             print(f"Erreur lors de la requête HTTP: {response.status_code}")
-        #print(all_messages)
-        
+
+        event_info = {}
         for event in all_messages:
-            create_event(event)
+            print('\n')
+            event_info[event['name']] = adapt_text(event)
             
+        print(event_info)   
         
 def reformat_date(date_range_str, day_name):
     # Split the date range string to extract the start and end dates
@@ -109,6 +112,20 @@ def reformat_date(date_range_str, day_name):
     
     return formatted_date
 
+def adapt_text(event):
+    start, end = split_time_range(event['time'])
+    event_start = event['date']+ 'T' + start + ':00+02:00'
+    print(f'Event start : {event_start}')
+    event_end = event['date']+ 'T' + end + ':00+02:00'
+    print(f'Event end : {event_end}')
+    return event_start, event_end
+
+def split_time_range(time_range):
+    start_time, end_time = time_range.split('-')
+    return start_time, end_time
+
+
+"""
 def create_event(event):
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
@@ -126,10 +143,7 @@ def create_event(event):
         # Save the credentials for the next run
         with open("token.json", "w") as token:
             token.write(creds.to_json())
-    event_start = event['date']+ 'T' + event['time']
-    print(event_start)
-    event_end = event['date']+ 'T' + event['time']
-    print(event_end)
+    
     try:
         service = build("calendar", "v3", credentials=creds)
         # Create the event object
@@ -152,6 +166,6 @@ def create_event(event):
 
     except HttpError as error:
         print(f"An error occurred: {error}")
-
+"""
 if __name__ == "__main__":
     main()
