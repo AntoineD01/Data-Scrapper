@@ -79,7 +79,10 @@ def main():
 
         #print(event_info)
         for event in all_messages:
-            create_event(event, event_info)
+            exist = create_event(event, event_info)
+
+        if exist == 1:
+            print("Nothing new for now.")
         
 def reformat_date(date_range_str, day_name):
     # Split the date range string to extract the start and end dates
@@ -192,15 +195,18 @@ def create_event(event, event_info):
             },
         }
 
-        
+        exist = -1
         if check_event_existence(service, event_data):
-            print(f'This event already exist.')
+            exist = 1
         else:
             # Insert the event into the calendar
-            """event = service.events().insert(calendarId='primary', body=event_data).execute()
-            print(f"Event created: {event.get('htmlLink')}")"""
+            event = service.events().insert(calendarId='primary', body=event_data).execute()
+            print(f"Event created: {event.get('htmlLink')}")
             print("We enter the data !")
-    
+        
+        if exist == 1:
+            return exist
+
     except HttpError as error:
         print(f"An error occurred: {error}")
 
