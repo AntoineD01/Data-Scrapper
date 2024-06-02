@@ -77,7 +77,7 @@ def main():
         for event in all_messages:
             event_info[event['name']] = adapt_text(event)
 
-        #print(event_info)
+        
         for event in all_messages:
             exist = create_event(event, event_info)
 
@@ -139,14 +139,14 @@ def check_event_existence(service, event_data):
             singleEvents=True,
             orderBy='startTime'
         ).execute()
-        #print(f'Event result : {events_result}\n')
+        
 
         # Get the list of events
         events = events_result.get('items', [])
-        #print(f'Event : {events}\n')
+        
         # Iterate through each event and check if it matches the event_data
         for existing_event in events:
-            #print(f'Existing event : {existing_event}\n')
+            
             # Compare event summary, start time, and end time
             if (existing_event.get('summary') == event_data['summary']
                     and existing_event.get('start').get('dateTime') == event_data['start'].get('dateTime')
@@ -183,7 +183,7 @@ def create_event(event, event_info):
         service = build("calendar", "v3", credentials=creds)
         # Create the event object
         event_data = {
-            'summary': event['name'],
+            'summary': '🏎 FORMULA 2 ' + event['location']+' - ' +event['name'],
             'location': event['location'],
             'start': {
                 'dateTime': event_info[event['name']][0],
