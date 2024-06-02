@@ -76,7 +76,7 @@ def main():
         event_info = {}
         for event in all_messages:
             event_info[event['name']] = adapt_text(event)
-            
+
         #print(event_info)
         for event in all_messages:
             create_event(event, event_info)
@@ -123,6 +123,41 @@ def split_time_range(time_range):
     start_time, end_time = time_range.split('-')
     return start_time, end_time
 
+def check_event_existence(service, event_data):
+    try:
+        # Define the time range to search for events
+        now = datetime.datetime.utcnow().isoformat() + 'Z'
+        
+
+        # Call the Calendar API to retrieve events within the time range
+        events_result = service.events().list(
+            calendarId='primary',
+            timeMin=now,
+            singleEvents=True,
+            orderBy='startTime'
+        ).execute()
+        #print(f'Event result : {events_result}\n')
+
+        # Get the list of events
+        events = events_result.get('items', [])
+        #print(f'Event : {events}\n')
+        # Iterate through each event and check if it matches the event_data
+        for existing_event in events:
+            #print(f'Existing event : {existing_event}\n')
+            # Compare event summary, start time, and end time
+            if (existing_event.get('summary') == event_data['summary']
+                    and existing_event.get('start').get('dateTime') == event_data['start'].get('dateTime')
+                    and existing_event.get('end').get('dateTime') == event_data['end'].get('dateTime')):
+                # Similar event found
+                return True
+
+        # No similar event found
+        return False
+
+    except Exception as e:
+        print(f"An error occurred while checking event existence: {e}")
+        return False
+
 def create_event(event, event_info):
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
@@ -157,10 +192,15 @@ def create_event(event, event_info):
             },
         }
 
-        # Insert the event into the calendar
-        event = service.events().insert(calendarId='primary', body=event_data).execute()
-        print(f"Event created: {event.get('htmlLink')}")
-
+        
+        if check_event_existence(service, event_data):
+            print(f'This event already exist.')
+        else:
+            # Insert the event into the calendar
+            """event = service.events().insert(calendarId='primary', body=event_data).execute()
+            print(f"Event created: {event.get('htmlLink')}")"""
+            print("We enter the data !")
+    
     except HttpError as error:
         print(f"An error occurred: {error}")
 
