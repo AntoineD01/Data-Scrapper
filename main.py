@@ -10,7 +10,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ["https://www.googleapis.com/auth/calendar.events"]
+SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 def main():
     for i in range(1069, 1070):
@@ -75,10 +75,11 @@ def main():
 
         event_info = {}
         for event in all_messages:
-            print('\n')
             event_info[event['name']] = adapt_text(event)
             
-        print(event_info)   
+        #print(event_info)
+        for event in all_messages:
+            create_event(event, event_info)
         
 def reformat_date(date_range_str, day_name):
     # Split the date range string to extract the start and end dates
@@ -115,18 +116,14 @@ def reformat_date(date_range_str, day_name):
 def adapt_text(event):
     start, end = split_time_range(event['time'])
     event_start = event['date']+ 'T' + start + ':00+02:00'
-    print(f'Event start : {event_start}')
     event_end = event['date']+ 'T' + end + ':00+02:00'
-    print(f'Event end : {event_end}')
     return event_start, event_end
 
 def split_time_range(time_range):
     start_time, end_time = time_range.split('-')
     return start_time, end_time
 
-
-"""
-def create_event(event):
+def create_event(event, event_info):
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
@@ -149,14 +146,14 @@ def create_event(event):
         # Create the event object
         event_data = {
             'summary': event['name'],
-            'location': event['Location'],
+            'location': event['location'],
             'start': {
-                'dateTime': event_start,
-                'timeZone': 'UTC',
+                'dateTime': event_info[event['name']][0],
+                'timeZone': 'Europe/Paris',
             },
             'end': {
-                'dateTime': event_end,
-                'timeZone': 'UTC',
+                'dateTime': event_info[event['name']][1],
+                'timeZone': 'Europe/Paris',
             },
         }
 
@@ -166,6 +163,6 @@ def create_event(event):
 
     except HttpError as error:
         print(f"An error occurred: {error}")
-"""
+
 if __name__ == "__main__":
     main()
